@@ -3,15 +3,45 @@ import questionary
 import json
 import subprocess
 import pyperclip
+import base64
+import os
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+from cryptography.fernet import Fernet, InvalidToken
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 app = typer.Typer(help="Manage accounts and launch them in incognito mode.")
 console = Console()
 
 DB_FILE = Path.home() / ".tenant_accounts.json"
+
+KDF_ITERATIONS = 390000
+
+
+def derive_fernet_key(master_password: str, salt: bytes) -> bytes:
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=KDF_ITERATIONS,
+    )
+    return base64.urlsafe_b64encode(kdf.derive(master_password.encode("utf-8")))
+
+
+def encrypt_password(password: str, master_password: str) -> tuple[str, str]:
+    salt = os.urandom(16)
+    key = derive_fernet_key(master_password, salt)
+    encrypted_password = Fernet(key).encrypt(password.encode("utf-8")).decode("utf-8")
+    return encrypted_password, base64.b64encode(salt).decode("utf-8")
+
+
+def decrypt_password(encrypted_password: str, master_password: str, salt_b64: str) -> str:
+    salt = base64.b64decode(salt_b64.encode("utf-8"))
+    key = derive_fernet_key(master_password, salt)
+    return Fernet(key).decrypt(encrypted_password.encode("utf-8")).decode("utf-8")
 
 def load_db() -> dict:
     if not DB_FILE.exists():
@@ -38,7 +68,8 @@ def add(
     alias: str = typer.Option(..., prompt="Account Alias (e.g., admin-user)", help="A short name to identify this account"),
     email: str = typer.Option(..., prompt="Email/Username"),
     password: str = typer.Option(..., prompt="Password", hide_input=True),
-    url: str = typer.Option("http://localhost:3000/login", prompt="Login URL", help="The URL to open for this account")
+    master_password: str = typer.Option(..., prompt="Master Password", hide_input=True, confirmation_prompt=True),
+    url: str = typer.Option("", prompt="Login URL", help="The URL to open for this account")
 ):
     db = load_db()
     
@@ -47,9 +78,12 @@ def add(
         if not overwrite:
             raise typer.Abort()
 
+    encrypted_password, salt = encrypt_password(password, master_password)
+
     db[alias] = {
         "email": email,
-        "password": password,
+        "password_encrypted": encrypted_password,
+        "salt": salt,
         "url": url
     }
     
@@ -114,6 +148,27 @@ def launch_account():
 
     account = db[selected]
 
+    if "password_encrypted" not in account or "salt" not in account:
+        console.print(
+            "[bold red]This account uses legacy plaintext password storage.[/bold red]"
+        )
+        console.print(
+            "[yellow]Delete and re-add this account to enable master-password encryption.[/yellow]"
+        )
+        return
+
+    master_password = typer.prompt("Master Password", hide_input=True)
+
+    try:
+        decrypted_password = decrypt_password(
+            account["password_encrypted"],
+            master_password,
+            account["salt"],
+        )
+    except (InvalidToken, ValueError):
+        console.print("[bold red]Master password is incorrect.[/bold red]")
+        return
+
     pyperclip.copy(account["email"])
     open_incognito(account["url"])
 
@@ -130,7 +185,7 @@ def launch_account():
 
     input()
 
-    pyperclip.copy(account["password"])
+    pyperclip.copy(decrypted_password)
     console.print("[bold green]✔ Password copied to clipboard. Exiting.[/bold green]")
     return
 

@@ -1,6 +1,6 @@
 [project]
 name = "cybr-tenant-cli"
-version = "0.1.1"
+version = "0.2.0"
 description = ""
 authors = [
     {name = "Dylan Lewis", email = "dylan17525@gmail.com"}
@@ -11,7 +11,8 @@ dependencies = [
     "typer (>=0.24.1,<0.25.0)",
     "questionary (>=2.1.1,<3.0.0)",
     "pyperclip (>=1.11.0,<2.0.0)",
-    "rich (>=13.0.0)"
+    "rich (>=13.0.0)",
+    "cryptography (>=45.0.0,<46.0.0)"
 ]
 
 [project.scripts]
