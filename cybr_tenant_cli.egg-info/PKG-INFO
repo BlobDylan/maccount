@@ -1,0 +1,43 @@
+Metadata-Version: 2.4
+Name: cybr-tenant-cli
+Version: 0.1.0
+Author: dylan
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: typer<0.25.0,>=0.24.1
+Requires-Dist: questionary<3.0.0,>=2.1.1
+Requires-Dist: pyperclip<2.0.0,>=1.11.0
+Requires-Dist: rich>=13.0.0
+
+# Account Manager
+
+A CLI tool to manage accounts and launch them in incognito mode with passwords automatically copied to clipboard.
+
+## Installation
+
+```bash
+pip install -e .
+```
+
+## Usage
+
+```bash
+# Add a new account
+account-manager add
+
+# List all accounts
+account-manager list
+
+# Open an account in incognito mode
+account-manager open
+
+# Delete an account
+account-manager delete
+```
+
+## Features
+
+- Store multiple account credentials securely
+- Launch URLs in incognito mode
+- Auto-copy passwords to clipboard
+- Interactive account selection

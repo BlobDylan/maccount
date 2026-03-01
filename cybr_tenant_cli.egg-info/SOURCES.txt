@@ -1,0 +1,9 @@
+README.md
+manager.py
+pyproject.toml
+cybr_tenant_cli.egg-info/PKG-INFO
+cybr_tenant_cli.egg-info/SOURCES.txt
+cybr_tenant_cli.egg-info/dependency_links.txt
+cybr_tenant_cli.egg-info/entry_points.txt
+cybr_tenant_cli.egg-info/requires.txt
+cybr_tenant_cli.egg-info/top_level.txt
