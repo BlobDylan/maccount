@@ -113,21 +113,26 @@ def launch_account():
         return
 
     account = db[selected]
-    
-    pyperclip.copy(account["password"])
-    
+
+    pyperclip.copy(account["email"])
+    open_incognito(account["url"])
+
     info_panel = Panel(
         f"[bold]Alias:[/bold] {selected}\n"
-        f"[bold]Email:[/bold] {account['email']}\n"
-        f"[bold]URL:[/bold] {account['url']}\n\n"
-        f"[bold green]✔ Password copied to clipboard! (Ready to paste)[/bold green]",
+        f"[bold]Email:[/bold] {account['email']}\n\n"
+        f"[bold green]✔ Email copied to clipboard![/bold green]\n"
+        f"Press Enter when you're ready to copy the password.",
         title="Account Launched",
         border_style="green",
         expand=False
     )
     console.print(info_panel)
-    
-    open_incognito(account["url"])
+
+    input()
+
+    pyperclip.copy(account["password"])
+    console.print("[bold green]✔ Password copied to clipboard. Exiting.[/bold green]")
+    return
 
 if __name__ == "__main__":
     app()
