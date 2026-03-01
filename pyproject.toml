@@ -3,7 +3,7 @@ name = "cybr-tenant-cli"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "dylan"}
+    {name = "Dylan Lewis", email = "dylan17525@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.11"
@@ -15,11 +15,11 @@ dependencies = [
 ]
 
 [project.scripts]
-maccount = "manager:app"
+maccount = "cybr_tenant_cli.manager:app"
 
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-py-modules = ["manager"]
+[tool.setuptools.packages.find]
+where = ["src"]
