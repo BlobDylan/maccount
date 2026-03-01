@@ -5,6 +5,8 @@ import subprocess
 import pyperclip
 import base64
 import os
+import tomllib
+from importlib.metadata import PackageNotFoundError, version as package_version
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
@@ -19,6 +21,41 @@ console = Console()
 DB_FILE = Path.home() / ".tenant_accounts.json"
 
 KDF_ITERATIONS = 390000
+
+
+def get_cli_version() -> str:
+    pyproject_file = Path(__file__).resolve().parents[2] / "pyproject.toml"
+    if pyproject_file.exists():
+        try:
+            with open(pyproject_file, "rb") as f:
+                project_data = tomllib.load(f)
+            return project_data["project"]["version"]
+        except (KeyError, OSError, tomllib.TOMLDecodeError):
+            pass
+
+    try:
+        return package_version("cybr-tenant-cli")
+    except PackageNotFoundError:
+        return "unknown"
+
+
+def version_callback(value: bool):
+    if value:
+        console.print(f"maccount {get_cli_version()}")
+        raise typer.Exit()
+
+
+@app.callback(invoke_without_command=True)
+def main(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        help="Show CLI version and exit",
+        callback=version_callback,
+        is_eager=True,
+    )
+):
+    pass
 
 
 def derive_fernet_key(master_password: str, salt: bytes) -> bytes:
